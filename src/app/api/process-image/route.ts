@@ -1,70 +1,57 @@
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { supabase } from "@/lib/supabaseClient";
+import sharp from "sharp";
 
-import { supabase } from '@/lib/supabaseClient';
-import sharp from 'sharp';
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-/**
- * Esta es una Ruta de API de Next.js que actúa como una Función Serverless.
- * Se encarga de procesar una imagen que ya ha sido subida a Supabase Storage.
- *
- * @param {Request} request - El objeto de la solicitud entrante.
- * @returns {Response} - Una respuesta JSON con la URL de la imagen procesada o un error.
- */
-export async function POST(request: Request) {
   try {
-    // 1. Extraer la ruta del archivo del cuerpo de la solicitud
-    const { filePath } = await request.json();
+    const { filePath } = req.body;
     if (!filePath) {
-      return new Response(JSON.stringify({ error: 'Falta la ruta del archivo (filePath).' }), { status: 400 });
+      return res.status(400).json({ error: "Falta la ruta del archivo (filePath)." });
     }
 
-    // --- TAREA 1: DESCARGAR LA IMAGEN ORIGINAL ---
+    // Descargar imagen
     const { data: downloadData, error: downloadError } = await supabase.storage
-      .from('images')
+      .from("images")
       .download(filePath);
 
     if (downloadError) {
-      console.error('Error al descargar la imagen:', downloadError);
-      return new Response(JSON.stringify({ error: 'No se pudo descargar la imagen original.' }), { status: 500 });
+      console.error("Error al descargar la imagen:", downloadError);
+      return res.status(500).json({ error: "No se pudo descargar la imagen original." });
     }
 
-    // --- TAREA 2: PROCESAR LA IMAGEN CON SHARP ---
-    // Convertimos la imagen a un buffer, la pasamos a escala de grises y la preparamos para subirla
     const imageBuffer = Buffer.from(await downloadData.arrayBuffer());
+
+    // Procesar con sharp
     const processedImageBuffer = await sharp(imageBuffer)
-      .grayscale() // ¡La magia sucede aquí!
-      .png() // Convertimos a PNG para consistencia
+      .grayscale()
+      .png()
       .toBuffer();
 
-    // --- TAREA 3: SUBIR LA IMAGEN PROCESADA ---
+    // Subir procesada
     const newFilePath = `processed/${Date.now()}-processed.png`;
 
     const { error: uploadError } = await supabase.storage
-      .from('images')
+      .from("images")
       .upload(newFilePath, processedImageBuffer, {
-        contentType: 'image/png',
-        upsert: false, // No sobrescribir si ya existe
+        contentType: "image/png",
       });
 
     if (uploadError) {
-      console.error('Error al subir la imagen procesada:', uploadError);
-      return new Response(JSON.stringify({ error: 'No se pudo subir la imagen procesada.' }), { status: 500 });
+      console.error("Error al subir procesada:", uploadError);
+      return res.status(500).json({ error: "No se pudo subir la imagen procesada." });
     }
 
-    // Obtener la URL pública de la imagen recién procesada
     const { data: { publicUrl } } = supabase.storage
-      .from('images')
+      .from("images")
       .getPublicUrl(newFilePath);
 
-    // Si todo fue exitoso, devolver la URL de la imagen procesada
-    return new Response(JSON.stringify({ processedUrl: publicUrl }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-  } catch (e) {
-    console.error('Error inesperado en la función:', e);
-    return new Response(JSON.stringify({ error: 'Ocurrió un error en el servidor.' }), { status: 500 });
+    return res.status(200).json({ processedUrl: publicUrl });
+  } catch (err) {
+    console.error("Error inesperado:", err);
+    return res.status(500).json({ error: "Ocurrió un error en el servidor." });
   }
 }
