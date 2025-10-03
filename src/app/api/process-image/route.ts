@@ -1,26 +1,26 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import { supabase } from "@/lib/supabaseClient";
 import sharp from "sharp";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
+export async function POST(request: Request) {
   try {
-    const { filePath } = req.body;
+    const { filePath } = await request.json();
     if (!filePath) {
-      return res.status(400).json({ error: "Falta la ruta del archivo (filePath)." });
+      return new Response(JSON.stringify({ error: "Falta la ruta del archivo (filePath)." }), {
+        status: 400,
+      });
     }
 
     // Descargar imagen
-    const { data: downloadData, error: downloadError } = await supabase.storage
+    const { data: downloadData, error: downloadError } = await supabase
+      .storage
       .from("images")
       .download(filePath);
 
     if (downloadError) {
       console.error("Error al descargar la imagen:", downloadError);
-      return res.status(500).json({ error: "No se pudo descargar la imagen original." });
+      return new Response(JSON.stringify({ error: "No se pudo descargar la imagen original." }), {
+        status: 500,
+      });
     }
 
     const imageBuffer = Buffer.from(await downloadData.arrayBuffer());
@@ -42,16 +42,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (uploadError) {
       console.error("Error al subir procesada:", uploadError);
-      return res.status(500).json({ error: "No se pudo subir la imagen procesada." });
+      return new Response(JSON.stringify({ error: "No se pudo subir la imagen procesada." }), {
+        status: 500,
+      });
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from("images")
-      .getPublicUrl(newFilePath);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("images").getPublicUrl(newFilePath);
 
-    return res.status(200).json({ processedUrl: publicUrl });
+    return new Response(JSON.stringify({ processedUrl: publicUrl }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (err) {
     console.error("Error inesperado:", err);
-    return res.status(500).json({ error: "Ocurrió un error en el servidor." });
+    return new Response(JSON.stringify({ error: "Ocurrió un error en el servidor." }), {
+      status: 500,
+    });
   }
 }
