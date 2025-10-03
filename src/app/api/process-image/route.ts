@@ -1,66 +1,45 @@
-import { supabase } from "@/lib/supabaseClient";
-import sharp from "sharp";
+// /api/process-image/route.ts
 
-export const runtime = 'nodejs';
+// NO SE NECESITA NINGUNA LIBRERÍA DE IMÁGENES
 
 export async function POST(request: Request) {
   try {
-    const { filePath } = await request.json();
-    if (!filePath) {
-      return new Response(JSON.stringify({ error: "Falta la ruta del archivo (filePath)." }), {
-        status: 400,
-      });
+    // 1. Recibimos la URL pública de la imagen que ya está en Supabase
+    const { publicUrl } = await request.json();
+    if (!publicUrl) {
+      return new Response(
+        JSON.stringify({ error: "Falta la URL pública (publicUrl)." }),
+        {
+          status: 400,
+        }
+      );
     }
 
-    // Descargar imagen
-    const { data: downloadData, error: downloadError } = await supabase
-      .storage
-      .from("images")
-      .download(filePath);
+    const CLOUD_NAME = "dgkpgsuz8";
 
-    if (downloadError) {
-      console.error("Error al descargar la imagen:", downloadError);
-      return new Response(JSON.stringify({ error: "No se pudo descargar la imagen original." }), {
-        status: 500,
-      });
-    }
+    // 3. Construimos la nueva URL de Cloudinary para la transformación
+    //    e_grayscale -> aplica el efecto de escala de grises
+    //    f_png -> fuerza el formato de salida a PNG
+    const transformation = "e_grayscale/f_png";
 
-    const imageBuffer = Buffer.from(await downloadData.arrayBuffer());
+    // La URL final usa el método 'fetch' de Cloudinary para tomar la imagen de Supabase
+    const processedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/${transformation}/${publicUrl}`;
 
-    // Procesar con sharp
-    const processedImageBuffer = await sharp(imageBuffer)
-      .grayscale()
-      .png()
-      .toBuffer();
-
-    // Subir procesada
-    const newFilePath = `processed/${Date.now()}-processed.png`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("images")
-      .upload(newFilePath, processedImageBuffer, {
-        contentType: "image/png",
-      });
-
-    if (uploadError) {
-      console.error("Error al subir procesada:", uploadError);
-      return new Response(JSON.stringify({ error: "No se pudo subir la imagen procesada." }), {
-        status: 500,
-      });
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("images").getPublicUrl(newFilePath);
-
-    return new Response(JSON.stringify({ processedUrl: publicUrl }), {
+    // 4. Devolvemos la URL de Cloudinary
+    return new Response(JSON.stringify({ processedUrl }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (err) {
-    console.error("Error inesperado:", err);
-    return new Response(JSON.stringify({ error: "Ocurrió un error en el servidor." }), {
-      status: 500,
-    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("Error:", err.message, err.stack);
+    } else {
+      console.error("Error desconocido:", err);
+    }
+
+    return new Response(
+      JSON.stringify({ error: "Ocurrió un error en el servidor." }),
+      { status: 500 }
+    );
   }
 }

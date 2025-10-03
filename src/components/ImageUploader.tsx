@@ -81,16 +81,21 @@ export default function ImageUploader() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ filePath: fileName }), // Enviamos la ruta del archivo a procesar
+        // ¡CAMBIO AQUÍ! Enviamos la URL pública directamente
+        body: JSON.stringify({ publicUrl: publicUrl }),
       });
 
       const result = await response.json();
 
-       if (!response.ok) {
-    // Si hay un error, intentamos leer el texto del error que manda el servidor
-    const errorData = await response.json().catch(() => ({ error: 'El servidor respondió con un error inesperado.' }));
-    throw new Error(errorData.error || `Error ${response.status}`);
-  }
+      if (!response.ok) {
+        // Si hay un error, intentamos leer el texto del error que manda el servidor
+        const errorData = await response
+          .json()
+          .catch(() => ({
+            error: "El servidor respondió con un error inesperado.",
+          }));
+        throw new Error(errorData.error || `Error ${response.status}`);
+      }
 
       // 3. Mostrar la imagen procesada
       setProcessedImageUrl(result.processedUrl);
