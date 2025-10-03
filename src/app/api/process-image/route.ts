@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 
 import { supabase } from '@/lib/supabaseClient';
 import sharp from 'sharp';
