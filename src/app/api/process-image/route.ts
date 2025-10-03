@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabaseClient";
 import sharp from "sharp";
 
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const { filePath } = await request.json();
