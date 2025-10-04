@@ -20,7 +20,9 @@ export async function POST(request: Request) {
       case "sepia":
         transformations.push("e_sepia");
         break;
-      // Si es 'none' o no se especifica, no hacemos nada.
+      case "cartoonify":
+        transformations.push("e_cartoonify");
+        break;
       default:
         break;
     }

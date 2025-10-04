@@ -3,7 +3,7 @@ import { useState, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 // Tipo para los filtros de color
-export type ColorOptions = "none" | "grayscale" | "sepia";
+export type ColorOptions = "none" | "grayscale" | "sepia" | 'cartoonify';
 
 export type TransformationOptions = {
   color: ColorOptions;
