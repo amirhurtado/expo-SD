@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { ImageCard } from './ImageCard'; // Importamos el nuevo componente
+import { ImageCard } from './ImageCard';
 
 type ProcessedImage = {
   id: number;
@@ -18,11 +18,12 @@ export function ImageGallery({ refreshKey }: { refreshKey: number }) {
   useEffect(() => {
     const fetchImages = async () => {
       setLoading(true);
+      // Pedimos más imágenes para llenar el espacio vertical
       const { data, error } = await supabase
         .from('processed_images')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(8);
+        .limit(20); // Aumentamos el límite
 
       if (error) {
         console.error("Error fetching images:", error);
@@ -35,27 +36,25 @@ export function ImageGallery({ refreshKey }: { refreshKey: number }) {
     fetchImages();
   }, [refreshKey]);
 
-  // --- ¡NUEVA LÓGICA! ---
-  // Función que se pasará a cada ImageCard para actualizar la UI al borrar
   const handleImageDeleted = (deletedId: number) => {
     setImages(currentImages => currentImages.filter(image => image.id !== deletedId));
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-12">
-      <h2 className="text-2xl font-bold text-white text-center mb-6">Galería de Imágenes Recientes</h2>
+    <div className="w-full mx-auto">
+      <h2 className="text-xl font-bold text-white text-center mb-6 sticky top-0  backdrop-blur-sm py-2 z-10">
+        Galería Reciente
+      </h2>
       
       {loading ? (
-        <p className="text-center text-slate-400">Cargando galería...</p>
+        <p className="text-center text-slate-400">Cargando...</p>
       ) : images.length === 0 ? (
-        // --- ¡NUEVA LÓGICA! --- Mensaje para cuando no hay imágenes
-        <div className="text-center bg-slate-900/50 border border-slate-800 rounded-lg p-8">
-          <p className="text-slate-400">No hay imágenes recientes.</p>
-          <p className="text-sm text-slate-500">¡Sube una imagen para empezar la galería!</p>
+        <div className="text-center p-4">
+          <p className="text-sm text-slate-400">No hay imágenes.</p>
         </div>
       ) : (
-        // --- ¡NUEVA LÓGICA! --- Mapeamos y renderizamos el componente ImageCard
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        // ¡CAMBIO CLAVE! Reemplazamos 'grid' por 'flex flex-col' para una lista vertical
+        <div className="flex flex-col gap-4">
           {images.map((image) => (
             <ImageCard 
               key={image.id} 
