@@ -31,7 +31,7 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({ options, onOptionCha
       </div>
     </div>
     <button onClick={onUpload} disabled={!isFileSelected || isUploading} className="w-full bg-pink-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-pink-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition-all">
-      {isUploading ? "Procesando..." : "2. ✨ Aplicar Magia"}
+      {isUploading ? "Procesando..." : "2. Procesar"}
     </button>
   </div>
 );

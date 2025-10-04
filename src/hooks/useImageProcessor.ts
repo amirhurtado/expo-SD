@@ -8,7 +8,7 @@ export type TransformationOptions = {
 };
 
 // Este es nuestro nuevo hook personalizado
-export function useImageProcessor() {
+export function useImageProcessor(onUploadSuccess?: () => void) {
   const [uploading, setUploading] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
@@ -79,6 +79,9 @@ export function useImageProcessor() {
       const result = await response.json();
       setProcessedImageUrl(result.processedUrl);
       setMessage("¡Procesamiento completado!");
+       if (onUploadSuccess) {
+        onUploadSuccess();
+      }
 
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : "Ocurrió un error desconocido.";

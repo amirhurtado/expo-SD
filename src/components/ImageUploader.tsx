@@ -8,9 +8,10 @@ import { OptionsPanel } from './OptionsPanel';
 import { ResultsDisplay } from './ResultsDisplay';
 import { WatermarkDialog } from './WatermarkDialog';
 
-export default function ImageUploader() {
+
+export default function ImageUploader({ onUploadSuccess }: { onUploadSuccess: () => void }) {
   // El cerebro de la aplicación sigue siendo el hook
-  const { states, actions } = useImageProcessor();
+  const { states, actions } = useImageProcessor(onUploadSuccess);
 
   return (
     <div className="w-full max-w-4xl bg-slate-900/70 backdrop-blur-xl rounded-2xl shadow-2xl p-6 sm:p-8 border border-slate-700">

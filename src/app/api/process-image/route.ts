@@ -1,8 +1,7 @@
-// app/api/process-image/route.ts
+import { supabase } from "@/lib/supabaseClient";
 
 export async function POST(request: Request) {
   try {
-    // ¡CAMBIO! Recibimos también el watermarkText
     const { publicUrl, options, watermarkText } = await request.json();
     if (!publicUrl || !options) {
       return new Response(
@@ -19,18 +18,30 @@ export async function POST(request: Request) {
     }
 
     if (options.watermark) {
-      // ¡CAMBIO CLAVE! Usamos el texto del usuario y lo codificamos para la URL
-      // Usamos un texto por defecto si el usuario no envía nada
       const textToApply = watermarkText || "Default Text";
-      // Codificamos caracteres especiales (espacios, comas, etc.) para que la URL sea válida
       const encodedText = encodeURIComponent(textToApply);
-      
       transformations.push(`l_text:Arial_24:${encodedText},co_white,g_south_east,x_10,y_10`);
     }
 
     const transformationString = transformations.join("/");
     const finalTransformation = transformationString || "f_png";
     const processedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/${finalTransformation}/${publicUrl}`;
+
+    // --- ¡NUEVA LÓGICA AÑADIDA AQUÍ! ---
+    // Después de generar la URL procesada, la guardamos en la base de datos.
+    const { error: dbError } = await supabase
+      .from('processed_images')
+      .insert({ 
+        original_url: publicUrl, 
+        processed_url: processedUrl 
+      });
+
+    // Si hay un error en la BD, lo mostramos en la consola del servidor,
+    // pero no detenemos la respuesta al usuario.
+    if (dbError) {
+      console.error("Error saving to database:", dbError);
+    }
+    // --- FIN DE LA NUEVA LÓGICA ---
 
     return new Response(JSON.stringify({ processedUrl }), {
       status: 200,
