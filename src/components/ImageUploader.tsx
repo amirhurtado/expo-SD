@@ -1,16 +1,12 @@
 "use client";
 
 import { useImageProcessor } from '@/hooks/useImageProcessor';
-
-// Importamos los nuevos componentes hijos
 import { UploadZone } from './UploadZone';
 import { OptionsPanel } from './OptionsPanel';
 import { ResultsDisplay } from './ResultsDisplay';
 import { WatermarkDialog } from './WatermarkDialog';
 
-
 export default function ImageUploader({ onUploadSuccess }: { onUploadSuccess: () => void }) {
-  // El cerebro de la aplicación sigue siendo el hook
   const { states, actions } = useImageProcessor(onUploadSuccess);
 
   return (
@@ -22,7 +18,10 @@ export default function ImageUploader({ onUploadSuccess }: { onUploadSuccess: ()
         />
         <OptionsPanel
           options={states.options}
-          onOptionChange={actions.handleOptionChange}
+          // --- ¡ESTOS SON LOS CAMBIOS IMPORTANTES! ---
+          onColorChange={actions.handleColorChange} // Usamos la nueva función para color
+          onWatermarkToggle={actions.handleWatermarkToggle} // Usamos la nueva función para el toggle
+          // --- FIN DE LOS CAMBIOS ---
           onUpload={actions.handleUpload}
           onConfigureWatermark={() => actions.setIsDialogOpen(true)}
           isUploading={states.uploading}

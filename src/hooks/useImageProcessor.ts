@@ -1,31 +1,39 @@
-import { useState, ChangeEvent } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+// hooks/useImageProcessor.ts
+import { useState, ChangeEvent } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
-// Definimos los tipos aquí para que puedan ser usados por el hook y los componentes
+// Tipo para los filtros de color
+export type ColorOptions = "none" | "grayscale" | "sepia";
+
 export type TransformationOptions = {
-  grayscale: boolean;
+  color: ColorOptions;
   watermark: boolean;
 };
 
-// Este es nuestro nuevo hook personalizado
 export function useImageProcessor(onUploadSuccess?: () => void) {
   const [uploading, setUploading] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("Sube una imagen (PNG, JPG)");
+
+  // ✅ Nuevo estado de opciones con color y watermark
   const [options, setOptions] = useState<TransformationOptions>({
-    grayscale: false,
+    color: "none",
     watermark: false,
   });
+
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [watermarkText, setWatermarkText] = useState<string>("Mi App @ 2025");
 
-  const handleOptionChange = (option: keyof TransformationOptions) => {
-    setOptions((prev) => ({
-      ...prev,
-      [option]: !prev[option],
-    }));
+  // ✅ Manejar cambios en el filtro de color
+  const handleColorChange = (color: ColorOptions) => {
+    setOptions((prev) => ({ ...prev, color }));
+  };
+
+  // ✅ Alternar watermark
+  const handleWatermarkToggle = () => {
+    setOptions((prev) => ({ ...prev, watermark: !prev.watermark }));
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -52,7 +60,7 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
     setProcessedImageUrl(null);
 
     try {
-      // Sube a Supabase
+      // Subida a Supabase
       const fileName = `public/${Date.now()}-${selectedFile.name}`;
       const { error: uploadError } = await supabase.storage
         .from("images")
@@ -60,11 +68,14 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
 
       if (uploadError) throw new Error(uploadError.message);
 
-      const { data: { publicUrl } } = supabase.storage.from("images").getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("images").getPublicUrl(fileName);
+
       setOriginalImageUrl(publicUrl);
       setMessage("2. Aplicando transformaciones...");
 
-      // Llama a la API para procesar
+      // Llamada a la API
       const response = await fetch("/api/process-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,20 +83,22 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Error inesperado del servidor." }));
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Error inesperado del servidor." }));
         throw new Error(errorData.error || `Error ${response.status}`);
       }
 
       const result = await response.json();
       setProcessedImageUrl(result.processedUrl);
       setMessage("¡Procesamiento completado!");
-       if (onUploadSuccess) {
+      if (onUploadSuccess) {
         onUploadSuccess();
       }
-
     } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : "Ocurrió un error desconocido.";
-        setMessage(`Error: ${errorMessage}`);
+      const errorMessage =
+        err instanceof Error ? err.message : "Ocurrió un error desconocido.";
+      setMessage(`Error: ${errorMessage}`);
     } finally {
       setUploading(false);
     }
@@ -97,7 +110,6 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
     }
   };
 
-  // El hook devuelve los estados y las funciones que la UI necesitará
   return {
     states: {
       uploading,
@@ -110,7 +122,8 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
       watermarkText,
     },
     actions: {
-      handleOptionChange,
+      handleColorChange, // nuevo
+      handleWatermarkToggle, // nuevo
       handleFileChange,
       handleUpload,
       handleDownload,

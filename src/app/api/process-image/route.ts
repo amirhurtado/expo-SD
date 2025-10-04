@@ -2,21 +2,30 @@ import { supabase } from "@/lib/supabaseClient";
 
 export async function POST(request: Request) {
   try {
+    // ¡CAMBIO! Recibimos un objeto de opciones más complejo
     const { publicUrl, options, watermarkText } = await request.json();
     if (!publicUrl || !options) {
-      return new Response(
-        JSON.stringify({ error: "Faltan parámetros: publicUrl u options." }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: "Faltan parámetros." }), { status: 400 });
     }
 
     const CLOUD_NAME = "dgkpgsuz8";
     const transformations = [];
 
-    if (options.grayscale) {
-      transformations.push("e_grayscale");
+    // --- ¡NUEVA LÓGICA DE CATEGORÍAS! ---
+    // Categoría: Color
+    switch (options.color) {
+      case "grayscale":
+        transformations.push("e_grayscale");
+        break;
+      case "sepia":
+        transformations.push("e_sepia");
+        break;
+      // Si es 'none' o no se especifica, no hacemos nada.
+      default:
+        break;
     }
 
+    // Categoría: Marca de Agua (sigue igual)
     if (options.watermark) {
       const textToApply = watermarkText || "Default Text";
       const encodedText = encodeURIComponent(textToApply);
@@ -27,21 +36,11 @@ export async function POST(request: Request) {
     const finalTransformation = transformationString || "f_png";
     const processedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/${finalTransformation}/${publicUrl}`;
 
-    // --- ¡NUEVA LÓGICA AÑADIDA AQUÍ! ---
-    // Después de generar la URL procesada, la guardamos en la base de datos.
-    const { error: dbError } = await supabase
-      .from('processed_images')
-      .insert({ 
-        original_url: publicUrl, 
-        processed_url: processedUrl 
-      });
-
-    // Si hay un error en la BD, lo mostramos en la consola del servidor,
-    // pero no detenemos la respuesta al usuario.
-    if (dbError) {
-      console.error("Error saving to database:", dbError);
-    }
-    // --- FIN DE LA NUEVA LÓGICA ---
+    // ... (El resto de la lógica de guardado en BD no cambia)
+    await supabase.from('processed_images').insert({ 
+      original_url: publicUrl, 
+      processed_url: processedUrl 
+    });
 
     return new Response(JSON.stringify({ processedUrl }), {
       status: 200,
