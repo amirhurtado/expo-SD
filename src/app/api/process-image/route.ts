@@ -1,18 +1,18 @@
+// app/api/process-image/route.ts
 import { supabase } from "@/lib/supabaseClient";
 
 export async function POST(request: Request) {
   try {
-    // ¡CAMBIO! Recibimos un objeto de opciones más complejo
+    // ✅ Recibimos URL pública y opciones
     const { publicUrl, options, watermarkText } = await request.json();
     if (!publicUrl || !options) {
       return new Response(JSON.stringify({ error: "Faltan parámetros." }), { status: 400 });
     }
 
     const CLOUD_NAME = "dgkpgsuz8";
-    const transformations = [];
+    const transformations: string[] = [];
 
-    // --- ¡NUEVA LÓGICA DE CATEGORÍAS! ---
-    // Categoría: Color
+    // --- Categoría: Color ---
     switch (options.color) {
       case "grayscale":
         transformations.push("e_grayscale");
@@ -27,21 +27,29 @@ export async function POST(request: Request) {
         break;
     }
 
-    // Categoría: Marca de Agua (sigue igual)
+    // --- Categoría: Marca de Agua ---
     if (options.watermark) {
       const textToApply = watermarkText || "Default Text";
       const encodedText = encodeURIComponent(textToApply);
-      transformations.push(`l_text:Arial_24:${encodedText},co_white,g_south_east,x_10,y_10`);
+      transformations.push(
+        `l_text:Arial_24:${encodedText},co_white,g_south_east,x_10,y_10`
+      );
     }
 
+    // --- Categoría: Forma ---
+    if (options.shape === "circle") {
+      transformations.push("r_max"); // 🔥 Aplica recorte circular
+    }
+
+    // --- Construcción de la URL final ---
     const transformationString = transformations.join("/");
     const finalTransformation = transformationString || "f_png";
     const processedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/${finalTransformation}/${publicUrl}`;
 
-    // ... (El resto de la lógica de guardado en BD no cambia)
-    await supabase.from('processed_images').insert({ 
-      original_url: publicUrl, 
-      processed_url: processedUrl 
+    // --- Guardar en la BD (Supabase) ---
+    await supabase.from("processed_images").insert({
+      original_url: publicUrl,
+      processed_url: processedUrl,
     });
 
     return new Response(JSON.stringify({ processedUrl }), {

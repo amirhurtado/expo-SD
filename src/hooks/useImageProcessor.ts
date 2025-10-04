@@ -2,12 +2,14 @@
 import { useState, ChangeEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-// Tipo para los filtros de color
-export type ColorOptions = "none" | "grayscale" | "sepia" | 'cartoonify';
+// ✅ Tipos de opciones
+export type ColorOptions = "none" | "grayscale" | "sepia" | "cartoonify";
+export type ShapeOptions = "none" | "circle";
 
 export type TransformationOptions = {
   color: ColorOptions;
   watermark: boolean;
+  shape: ShapeOptions;
 };
 
 export function useImageProcessor(onUploadSuccess?: () => void) {
@@ -17,25 +19,34 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
   const [processedImageUrl, setProcessedImageUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("Sube una imagen (PNG, JPG)");
 
-  // ✅ Nuevo estado de opciones con color y watermark
+  // ✅ Nuevo estado de opciones (color + watermark + shape)
   const [options, setOptions] = useState<TransformationOptions>({
     color: "none",
     watermark: false,
+    shape: "none",
   });
 
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [watermarkText, setWatermarkText] = useState<string>("Mi App @ 2025");
 
-  // ✅ Manejar cambios en el filtro de color
+  // --- Handlers de opciones ---
   const handleColorChange = (color: ColorOptions) => {
     setOptions((prev) => ({ ...prev, color }));
   };
 
-  // ✅ Alternar watermark
   const handleWatermarkToggle = () => {
     setOptions((prev) => ({ ...prev, watermark: !prev.watermark }));
   };
 
+  // ✅ NUEVO HANDLER: Alternar shape
+  const handleShapeToggle = () => {
+    setOptions((prev) => ({
+      ...prev,
+      shape: prev.shape === "circle" ? "none" : "circle",
+    }));
+  };
+
+  // --- File input ---
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -49,6 +60,7 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
     }
   };
 
+  // --- Upload + procesamiento ---
   const handleUpload = async () => {
     if (!selectedFile) {
       setMessage("Por favor, selecciona un archivo primero.");
@@ -75,7 +87,7 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
       setOriginalImageUrl(publicUrl);
       setMessage("2. Aplicando transformaciones...");
 
-      // Llamada a la API
+      // 🔥 Enviamos también `shape` a la API
       const response = await fetch("/api/process-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,6 +116,7 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
     }
   };
 
+  // --- Download ---
   const handleDownload = () => {
     if (processedImageUrl) {
       window.open(processedImageUrl, "_blank");
@@ -122,8 +135,9 @@ export function useImageProcessor(onUploadSuccess?: () => void) {
       watermarkText,
     },
     actions: {
-      handleColorChange, // nuevo
-      handleWatermarkToggle, // nuevo
+      handleColorChange,
+      handleWatermarkToggle,
+      handleShapeToggle, // ✅ nuevo
       handleFileChange,
       handleUpload,
       handleDownload,

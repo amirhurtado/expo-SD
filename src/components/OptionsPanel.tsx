@@ -5,6 +5,7 @@ type OptionsPanelProps = {
   options: TransformationOptions;
   onColorChange: (color: ColorOptions) => void;
   onWatermarkToggle: () => void;
+  onShapeToggle: () => void; // ✅ NUEVA PROP
   onUpload: () => void;
   onConfigureWatermark: () => void;
   isUploading: boolean;
@@ -15,6 +16,7 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
   options,
   onColorChange,
   onWatermarkToggle,
+  onShapeToggle,
   onUpload,
   onConfigureWatermark,
   isUploading,
@@ -36,7 +38,7 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
             { value: "none", label: "Ninguno" },
             { value: "grayscale", label: "B & N" },
             { value: "sepia", label: "Sepia" },
-            { value: "cartoonify", label: "Caricatura" }, // 🎉 nuevo filtro
+            { value: "cartoonify", label: "Caricatura" },
           ].map(({ value, label }) => (
             <button
               key={value}
@@ -53,31 +55,47 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({
         </div>
       </div>
 
-      {/* --- CATEGORÍA MARCA DE AGUA --- */}
-      <label className="flex items-center w-full p-3 rounded-lg bg-slate-800/80 hover:bg-slate-800/50 transition-all cursor-pointer">
-        <input
-          id="watermark-checkbox"
-          type="checkbox"
-          checked={options.watermark}
-          onChange={onWatermarkToggle}
-          className="h-5 w-5 rounded bg-slate-900 border-slate-700 text-pink-500 focus:ring-pink-500/50"
-        />
-        <span className="ml-3 text-sm font-medium text-slate-200 flex-grow">
-          Añadir Marca de Agua
-        </span>
-        {options.watermark && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onConfigureWatermark();
-            }}
-            className="text-xs text-pink-500 hover:text-pink-400 underline font-semibold ml-auto"
-          >
-            Configurar
-          </button>
-        )}
-      </label>
+      {/* --- OPCIONES DE CHECKBOXES --- */}
+      <div className="space-y-3">
+        {/* --- MARCA DE AGUA --- */}
+        <label className="flex items-center w-full p-3 rounded-lg bg-slate-800/80 hover:bg-slate-800/50 transition-all cursor-pointer">
+          <input
+            id="watermark-checkbox"
+            type="checkbox"
+            checked={options.watermark}
+            onChange={onWatermarkToggle}
+            className="h-5 w-5 rounded bg-slate-900 border-slate-700 text-pink-500 focus:ring-pink-500/50"
+          />
+          <span className="ml-3 text-sm font-medium text-slate-200 flex-grow">
+            Añadir Marca de Agua
+          </span>
+          {options.watermark && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onConfigureWatermark();
+              }}
+              className="text-xs text-pink-500 hover:text-pink-400 underline font-semibold ml-auto"
+            >
+              Configurar
+            </button>
+          )}
+        </label>
+
+        {/* --- NUEVA CATEGORÍA: FORMA --- */}
+        <label className="flex items-center w-full p-3 rounded-lg bg-slate-800/80 hover:bg-slate-800/50 transition-all cursor-pointer">
+          <input
+            type="checkbox"
+            checked={options.shape === "circle"}
+            onChange={onShapeToggle}
+            className="h-5 w-5 rounded bg-slate-900 border-slate-700 text-pink-500 focus:ring-pink-500/50"
+          />
+          <span className="ml-3 text-sm font-medium text-slate-200 flex-grow">
+            Forma: Ovalada
+          </span>
+        </label>
+      </div>
     </div>
 
     {/* --- BOTÓN DE PROCESAR --- */}
