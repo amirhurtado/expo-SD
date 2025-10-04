@@ -1,6 +1,110 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 body {
-  background: linear-gradient(135deg, #1a237e 0%, #121212 100%);
   color: white;
+   background: linear-gradient(135deg, #1a237e 0%, #121212 100%);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 320 90% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 174 90% 35%;
+    --radius: 0.75rem;
+  }
+ 
+  /* --- NUEVA PALETA DE COLORES DARK VIBRANTE --- */
+  .dark {
+    --background: 259 74% 5%; /* Púrpura muy oscuro, casi negro */
+    --foreground: 300 14% 96%; /* Texto blanco ligeramente rosado, muy legible */
+    
+    --card: 259 74% 8%; /* Púrpura oscuro para los contenedores, un poco más claro que el fondo */
+    --card-foreground: 300 14% 96%;
+    
+    --popover: 259 74% 5%;
+    --popover-foreground: 300 14% 96%;
+    
+    --primary: 320 100% 58%; /* Rosa/Magenta Neón para botones y acciones principales */
+    --primary-foreground: 0 0% 100%; /* Texto blanco puro para máximo contraste sobre el rosa */
+    
+    --secondary: 259 74% 15%;
+    --secondary-foreground: 300 14% 96%;
+    
+    --muted: 259 74% 10%;
+    --muted-foreground: 259 15% 65%; /* Gris lavanda para texto secundario */
+    
+    --accent: 259 74% 12%; /* Un púrpura más claro para efectos hover */
+    --accent-foreground: 300 14% 96%;
+    
+    --destructive: 0 84.2% 60.2%;
+    
+    --border: 259 74% 12%; /* Bordes de color púrpura sutil */
+    --input: 259 74% 10%; /* Fondo de inputs y checkboxes */
+    --ring: 174 100% 39%; /* Cian/Turquesa para el anillo de foco (focus ring) */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
